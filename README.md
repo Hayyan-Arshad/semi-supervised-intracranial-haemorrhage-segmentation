@@ -1,18 +1,42 @@
 # ICH Segmentation: Mean Teacher and SAM Distillation
 
-Reconstructed research code for binary intracranial hemorrhage segmentation in
-CT slices. Combines a TinySAM student, an exponential-moving-average teacher,
-and a frozen MedSAM teacher. Includes patient-disjoint data checks, paired
-ablation runs, checkpoint selection on validation patients, and patient-level
-test metrics.
+Semi-supervised binary intracranial hemorrhage segmentation in CT slices using
+a TinySAM student, Mean Teacher consistency, and knowledge distillation from a
+frozen MedSAM teacher. The training pipeline combines labeled supervision with
+prediction-derived spatial prompts and optional confidence/agreement filtering.
 
-**Status:** reconstructed implementation with synthetic execution checks.
-Medical-data experiments remain to be run. See [implementation notes](docs/PROVENANCE.md).
-Not for diagnosis or clinical deployment.
+The compact student performs inference without either teacher. Evaluation uses
+patient-disjoint splits and validation-selected checkpoints.
 
 ![Training architecture](docs/assets/pipeline.png)
 
+## Technical documentation
+
+- [Research methodology](docs/research_methodology.md): objectives, loss formulation, pseudo-supervision and ablations.
+- [Architecture](docs/architecture.md): model roles, encoder adaptations and prompt coordinates.
+- [Preprocessing](docs/preprocessing.md): CT input contract, windowing and annotation handling.
+- [Training details](docs/training_details.md): hyperparameters, commands, checkpointing and evaluation.
+- [Datasets](docs/datasets.md): manifest structure, patient splits and dataset provenance.
+
 ## Method
+
+### Design contributions
+
+- **Dual-teacher supervision:** combine temporal consistency from an EMA teacher
+  with temperature-scaled distillation from a larger medical foundation model.
+- **Annotation-free unlabeled prompting:** derive spatial boxes from EMA
+  predictions, with an explicit empty-proposal policy and no reference-mask access.
+- **Selective knowledge transfer:** optionally retain distillation targets only
+  where both teachers are confident and their foreground/background predictions agree.
+- **512-input encoder adaptation:** preserve pretrained parameter shapes and the
+  64x64 embedding interface using TinyViT stride adjustment and ViT-B patch-grid interpolation.
+
+The ablation configurations compare the supervision objectives and filtering.
+Prompt-generation and encoder-adaptation effects require separate comparisons.
+
+![Spatial prompt generation](docs/assets/prompt_flow.png)
+
+### Training objectives
 
 The student is trained on labeled slices with binary cross-entropy plus soft
 Dice loss. An EMA copy produces predictions on noisy unlabeled slices; the
@@ -29,6 +53,8 @@ The optional filter retains distillation pixels only when both teachers are at
 least 0.8 confident and their binary predictions agree. It may amplify shared errors, suppress
 small lesions, or select mostly background; inspect coverage and per-patient
 recall. There is no guarantee it improves over unfiltered distillation.
+
+![Distillation target selection](docs/assets/teacher_filter.png)
 
 ## Install and test
 
@@ -61,7 +87,7 @@ Weights are loaded strictly. Do not use a generic SAM checkpoint and label it
 MedSAM. The TinySAM and MedSAM normalization paths are intentionally distinct;
 verify them against the checkpoint release used. Native mode resizes slices
 to 1024x1024 for pretrained image encoders. The optional `--adaptation 512`
-instead reconstructs the discussed encoder handling: TinyViT first convolution
+uses the following encoder handling: TinyViT first convolution
 stride 2 to 1; ViT-B 32x32 patch embeddings interpolated to 64x64 before adding
 the pretrained positional embedding. Prompt coordinates remain in the original
 1024-coordinate embedding frame. This adaptation requires real-model testing
@@ -70,7 +96,7 @@ and accuracy comparisons before use in reported experiments.
 `--backbone efficientnet --mode supervised` and `--mode mean_teacher` provide
 EfficientNet-B2 U-Net baselines through segmentation-models-pytorch. Their
 encoders start without ImageNet weights. `--backbone resnet` is an additional
-ResNet18 U-Net baseline, not the historical plain U-Net architecture.
+ResNet18 U-Net baseline; it is not a plain U-Net encoder.
 
 ## Data contract
 
@@ -98,6 +124,8 @@ not guess original CT windows, infer dataset permissions, convert DICOM/NIfTI,
 or recreate patient splits. Prepare these from authorized data independently.
 
 ## Ablations
+
+![Ablation configurations](docs/assets/ablations.png)
 
 Run all five configurations on the same patients and paired seeds:
 
@@ -169,5 +197,7 @@ python scripts/check_sam_interfaces.py
 - [TinySAM](https://github.com/xinghaochen/TinySAM), runtime model definitions.
 - [MedSAM](https://github.com/bowang-lab/MedSAM), medical teacher checkpoint.
 
-Upstream source and checkpoint licenses remain their authors' terms. No private
-messages, patient images, clinical weights or historical results are uploaded.
+Upstream source and checkpoint licenses remain their authors' terms. SSL4MIS's
+runtime ramp utility carries its own CC BY-NC notice. No private messages,
+patient images or pretrained weights are uploaded. Research use only; not for
+diagnosis or clinical deployment.
