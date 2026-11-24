@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ich-segmentation"
 version = "0.1.0"
-description = "Reconstructed ICH segmentation experiments with Mean Teacher and SAM distillation"
+description = "Semi-supervised intracranial haemorrhage segmentation with Mean Teacher and SAM distillation"
 requires-python = ">=3.9"
 dependencies = ["torch>=2.2", "numpy>=1.24", "matplotlib>=3.7"]
 

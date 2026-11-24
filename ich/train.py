@@ -75,7 +75,7 @@ def run(args):
     labeled_iterator = endless(loader)
     unlabeled_iterator = endless(unlabeled) if unlabeled else None
     metadata = dict(vars(args), manifest_sha256=hashlib.sha256(Path(manifest).read_bytes()).hexdigest(),
-                    status="synthetic pipeline check; NOT medical performance" if args.smoke else "new experiment; not historical reproduction",
+                    status="synthetic pipeline check; NOT medical performance" if args.smoke else "manifest-based training run",
                     torch_version=torch.__version__)
     (output / "config.json").write_text(json.dumps(metadata, indent=2))
     best = -1

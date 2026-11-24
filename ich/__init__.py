@@ -1,1 +1,1 @@
-"""Research reconstruction; not a clinical product."""
+"""Semi-supervised intracranial haemorrhage segmentation research."""

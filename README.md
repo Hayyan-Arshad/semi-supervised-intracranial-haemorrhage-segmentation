@@ -1,4 +1,4 @@
-# ICH Segmentation: Mean Teacher and SAM Distillation
+# Semi-Supervised Intracranial Haemorrhage Segmentation
 
 Semi-supervised binary intracranial hemorrhage segmentation in CT slices using
 a TinySAM student, Mean Teacher consistency, and knowledge distillation from a
@@ -16,7 +16,7 @@ patient-disjoint splits and validation-selected checkpoints.
 - [Architecture](docs/architecture.md): model roles, encoder adaptations and prompt coordinates.
 - [Preprocessing](docs/preprocessing.md): CT input contract, windowing and annotation handling.
 - [Training details](docs/training_details.md): hyperparameters, commands, checkpointing and evaluation.
-- [Datasets](docs/datasets.md): manifest structure, patient splits and dataset provenance.
+- [Datasets](docs/datasets.md): source links, annotation types and patient splits.
 
 ## Method
 
@@ -120,8 +120,8 @@ Inputs are finite float32 CHW arrays with three pre-windowed CT channels in
 [0,1], or a single windowed HW array repeated across channels. Reference masks
 are binary HW arrays. Normalize from float32 HU data before saving, with
 window settings recorded in your dataset documentation. This repository does
-not guess original CT windows, infer dataset permissions, convert DICOM/NIfTI,
-or recreate patient splits. Prepare these from authorized data independently.
+not select CT windows, infer dataset permissions, convert DICOM/NIfTI,
+or generate patient splits. Prepare these from authorized data independently.
 
 ## Ablations
 

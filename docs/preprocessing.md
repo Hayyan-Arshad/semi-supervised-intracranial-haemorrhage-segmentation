@@ -35,8 +35,8 @@ windowed = (clip(HU, low, high) - low) / (high - low)
 ```
 
 This formula describes an external preparation option, not an automatic loader
-operation. No original window settings have been recovered, so none are supplied
-as historical defaults. Avoid float16 statistics on raw HU data: cast before
+operation. Window settings must be specified in the dataset preparation record.
+Avoid float16 statistics on raw HU data: cast before
 computing any means, standard deviations or clipping operations.
 
 If resizing masks externally, use nearest-neighbor interpolation. Continuous
@@ -64,7 +64,7 @@ Unlabeled box prompts come from EMA predictions, not hidden annotations.
 
 Training adds weak/strong Gaussian noise after loading and clamps to `[0,1]`.
 No elastic deformation, rotations, crop augmentation or boundary-aware loss is
-implemented. Those techniques should not be inferred from other project tasks.
+implemented.
 
 ## Quality checks
 
