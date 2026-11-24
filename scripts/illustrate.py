@@ -5,7 +5,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, Rectangle
-import numpy as np
 
 Path("docs/assets").mkdir(parents=True, exist_ok=True)
 fig, ax = plt.subplots(figsize=(12, 5), layout="constrained")
@@ -33,17 +32,3 @@ ax.text(6.1, 4.85, "Reconstructed training pipeline", fontsize=17, ha="center", 
 ax.text(6, -.02, "Optional distillation filter: teacher confidence and cross-teacher agreement", ha="center", fontsize=10)
 fig.savefig("docs/assets/pipeline.png", dpi=160)
 plt.close(fig)
-rng = np.random.default_rng(17)
-y, x = np.mgrid[:128, :128]
-mask = ((x-64)**2+(y-64)**2 < 22**2)
-image = np.clip(rng.normal(.2, .03, (128, 128)) + .55*mask, 0, 1)
-fig, axes = plt.subplots(1, 2, figsize=(8, 4), layout="constrained")
-axes[0].imshow(image, cmap="gray", vmin=0, vmax=1)
-axes[0].set_title("Synthetic software-test input")
-axes[1].imshow(image, cmap="gray", vmin=0, vmax=1)
-axes[1].contour(mask, levels=[.5], colors=["#ed4539"])
-axes[1].set_title("Synthetic reference mask")
-for axis in axes:
-    axis.axis("off")
-fig.suptitle("Not patient images or model predictions", fontsize=13)
-fig.savefig("docs/assets/synthetic.png", dpi=160)

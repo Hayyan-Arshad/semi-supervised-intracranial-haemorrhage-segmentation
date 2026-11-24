@@ -45,8 +45,6 @@ Smoke mode substitutes small convolutional models and generated circles for all
 SAM models and CT data. It verifies loss/backpropagation, EMA, checkpointing and
 evaluation flow; it does not test pretrained SAM quality.
 
-![Synthetic fixture, not medical data](docs/assets/synthetic.png)
-
 ## Real models
 
 ```bash
