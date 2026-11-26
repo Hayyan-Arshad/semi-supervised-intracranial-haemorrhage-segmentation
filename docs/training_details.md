@@ -90,8 +90,8 @@ calculate confidence intervals. Synthetic runs only check execution.
 
 Tied validation Dice does not replace the existing checkpoint. Validation runs
 at the configured interval and the final step. The trainer evaluates test data
-once at the end of each run. Do not use these test outputs for tuning repeated
-experiments; choose settings using validation only.
+once at the end of each run. Validation data provide the checkpoint-selection
+criterion; test outputs are separate from selection.
 
 ## Evaluation conventions
 

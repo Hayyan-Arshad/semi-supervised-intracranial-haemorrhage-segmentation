@@ -50,9 +50,8 @@ come from a first full-image prediction, not annotations. One box per slice may
 merge multiple hemorrhage regions; lesion-wise prompts are not implemented.
 
 The optional filter retains distillation pixels only when both teachers are at
-least 0.8 confident and their binary predictions agree. It may amplify shared errors, suppress
-small lesions, or select mostly background; inspect coverage and per-patient
-recall. There is no guarantee it improves over unfiltered distillation.
+least 0.8 confident and their binary predictions agree. Filter coverage and
+per-patient recall are recorded alongside segmentation metrics.
 
 ![Distillation target selection](docs/assets/teacher_filter.png)
 
@@ -83,15 +82,14 @@ python -m ich.train --manifest data/manifest.csv --mode combined \
   --device cuda --steps 10000 --output runs/combined
 ```
 
-Weights are loaded strictly. Do not use a generic SAM checkpoint and label it
-MedSAM. The TinySAM and MedSAM normalization paths are intentionally distinct;
-verify them against the checkpoint release used. Native mode resizes slices
+Weights are loaded strictly from the corresponding TinySAM and MedSAM releases.
+The TinySAM and MedSAM normalization paths are distinct. Native mode resizes slices
 to 1024x1024 for pretrained image encoders. The optional `--adaptation 512`
 uses the following encoder handling: TinyViT first convolution
 stride 2 to 1; ViT-B 32x32 patch embeddings interpolated to 64x64 before adding
 the pretrained positional embedding. Prompt coordinates remain in the original
-1024-coordinate embedding frame. This adaptation requires real-model testing
-and accuracy comparisons before use in reported experiments.
+1024-coordinate embedding frame. Encoder adaptation is separate from the
+supervision-objective ablations below.
 
 `--backbone efficientnet --mode supervised` and `--mode mean_teacher` provide
 EfficientNet-B2 U-Net baselines through segmentation-models-pytorch. Their
@@ -123,11 +121,11 @@ window settings recorded in your dataset documentation. This repository does
 not select CT windows, infer dataset permissions, convert DICOM/NIfTI,
 or generate patient splits. Prepare these from authorized data independently.
 
-## Ablations
+## Ablation design
 
 ![Ablation configurations](docs/assets/ablations.png)
 
-Run all five configurations on the same patients and paired seeds:
+The five configurations use the same patient manifest and paired seeds:
 
 | Mode | Supervised | EMA consistency | MedSAM distillation | Agreement filter |
 | --- | --- | --- | --- | --- |
@@ -137,32 +135,15 @@ Run all five configurations on the same patients and paired seeds:
 | `combined` | yes | yes | yes | no |
 | `filtered` | yes | yes | yes | yes |
 
-The distill-only run still uses an EMA model to propose boxes, but has no EMA
-consistency loss. Thus its comparison isolates the consistency objective, not
-the presence of an EMA network. Add a fixed common proposal source if you need
-to isolate teacher architecture from prompt quality.
+The comparisons separate EMA consistency, MedSAM distillation, their combination,
+and the addition of confidence/agreement filtering. The distillation-only mode
+retains the EMA box proposer but disables its consistency loss.
 
-```bash
-# Fast execution checks only:
-python scripts/ablations.py --smoke --steps 5 --seeds 17 29 43
-# Real experiments (GPU and authorized data/checkpoints required):
-python scripts/ablations.py --steps 10000 --seeds 17 29 43 \
-  --manifest data/manifest.csv --tiny-checkpoint checkpoints/tinysam.pth \
-  --medsam-checkpoint checkpoints/medsam_vit_b.pth --device cuda
-```
-
-Each run saves configuration and manifest hash, JSONL loss components and filter
-coverage, the best validation checkpoint, and per-patient test Dice, precision,
-recall, absolute relative volume difference and signed relative volume error.
-Zero-reference-volume patients have undefined volume difference (`null`), not
-an invented zero. Dice is 1 for empty prediction and empty reference.
-Metrics aggregate voxel counts per patient, then macro-average patient Dice.
-No physical voxel-volume correction is applied; inputs must preserve a common
-voxel volume within each patient's evaluated slices for volume interpretation.
-
-No real-data ablation results are available yet. Keep the test set locked while
-choosing hyperparameters from validation only. Report every seed, uncertainty,
-lesion-size sensitivity and filter coverage; do not cherry-pick test patients.
+A separate prompt-source comparison uses a frozen U-Net trained on the same
+labeled split to supply boxes across modes. This holds the proposer fixed while
+varying the supervision objectives. Encoder adaptation is held fixed within each
+comparison, as are checkpoint inputs, training budget and validation selection.
+Commands and metric definitions are in [Training details](docs/training_details.md#paired-ablations).
 
 ## Prediction comparisons
 
@@ -173,15 +154,14 @@ python scripts/compare.py --manifest data/manifest.csv \
 ```
 
 Panels show the input CT slice, reference contours in red and prediction contours
-in white, with per-slice Dice. Sampling follows manifest order rather than sorting
-for favorable scores. Generated patient panels stay in the ignored `runs/` folder.
+in white, with per-slice Dice. Sampling follows manifest order. Generated patient
+panels stay in the ignored `runs/` folder.
 
 ## Verification
 
 - CPU unit/integration suite covering all five training modes.
 - Fifteen synthetic runs: five modes, seeds 17/29/43, five optimization steps.
 - TinySAM and ViT-B random-weight 512x512 forward-interface checks.
-- Pretrained medical-data training and medical ablation results: pending.
 
 Run the architecture checks after fetching upstream sources:
 

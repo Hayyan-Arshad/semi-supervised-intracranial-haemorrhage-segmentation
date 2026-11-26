@@ -84,7 +84,7 @@ The repository does not generate train/validation/test ratios or patient-wise
 cross-validation folds. If using multiple folds, prepare an explicit manifest
 per fold and report the fold-construction method separately.
 
-## Record before reporting results
+## Dataset metadata
 
 - Dataset version, access source and permitted uses.
 - Patient and slice counts per split, including negative slices.

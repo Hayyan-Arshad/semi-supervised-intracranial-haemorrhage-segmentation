@@ -68,9 +68,9 @@ excluded from distillation, although consistency still applies to them.
 
 In filtered mode, a pixel is selected only when both teachers have untempered
 binary confidence of at least 0.8 and their thresholded predictions agree.
-Confidence/agreement filtering is an optional extension. It can remove useful
-small-lesion supervision or retain correlated mistakes; coverage and recall
-must be examined alongside Dice.
+Confidence/agreement filtering is an optional extension. Coverage and recall
+characterize its selection behavior alongside Dice, including sensitivity to
+small lesions and shared prediction errors.
 
 ## Combined objective and ablations
 
@@ -95,7 +95,8 @@ period: the initial ramp weight is approximately 0.0067.
 
 Distillation-only still uses EMA predictions for box proposals. Consequently,
 `distill` versus `combined` compares adding the consistency objective, not
-removing the EMA network. Compare all modes on identical patient manifests
-and paired seeds. No medical-data ablation outcomes are available yet.
+removing the EMA network. The design uses identical patient manifests and paired
+seeds across modes, with checkpoint inputs, encoder adaptation, training budget
+and validation selection held fixed.
 
 Implementation: [learning.py](../ich/learning.py), [train.py](../ich/train.py).
